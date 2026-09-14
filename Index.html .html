@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Corsa" />
+<meta name="theme-color" content="#14171A" />
+<title>Piano corsa</title>
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Piano%20corsa%22%2C%22short_name%22%3A%22Corsa%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2314171A%22%2C%22theme_color%22%3A%22%2314171A%22%7D" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%2314171A'/%3E%3Ccircle cx='90' cy='90' r='50' fill='none' stroke='%23E8462A' stroke-width='10'/%3E%3Ccircle cx='90' cy='90' r='50' fill='none' stroke='%232FA8A0' stroke-width='10' stroke-dasharray='157 157' stroke-dashoffset='118'/%3E%3C/svg%3E" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+  :root { --bg:#14171A; --panel:#1D2226; --panel2:#242A2F; --line:#333B41; --text:#ECEDE9; --dim:#9BA3A8;
+    --easy:#2FA8A0; --long:#4E8FE0; --tempo:#E8B34A; --interval:#E8462A; --recovery:#7C8CA6; --race:#D64545; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+  #app { max-width: 720px; margin: 0 auto; padding: 18px 14px 60px; }
+  .loading { padding: 40px; color: var(--dim); }
+  .header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .header h1 { font-family:'Oswald',sans-serif; font-weight:500; font-size:22px; margin:0; letter-spacing:0.3px; }
+  .header .sub { color: var(--dim); font-size:13px; margin-top:4px; }
+  .tabs { display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid var(--line); }
+  .tab-btn { background:none; border:none; color:var(--dim); padding:9px 4px; font-size:13.5px; cursor:pointer; border-bottom:2px solid transparent; font-family:'Inter',sans-serif; }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--interval); }
+  .panel { background: var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .panel h3 { font-family:'Oswald',sans-serif; font-weight:500; font-size:15px; margin:0 0 12px 0; }
+  .field { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; font-size:13px; color:var(--dim); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+  .inp { background: var(--panel2); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:8px 10px; font-size:14px; font-family:'Inter',sans-serif; width:100%; }
+  .inp.small { padding:6px 8px; font-size:13px; }
+  .inp:focus { outline:none; border-color: var(--interval); }
+  .type-picker { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { background:var(--panel2); border:1px solid var(--line); color:var(--dim); border-radius:20px; padding:6px 12px; font-size:12.5px; cursor:pointer; font-family:'Inter',sans-serif; }
+  .chip.chip-active { color:#0F1113; font-weight:600; }
+  .time-inputs { display:flex; gap:6px; align-items:center; }
+  .time-inputs .inp { width:60px; }
+  .form-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+  .btn-primary { background: var(--interval); color:#fff; border:none; border-radius:7px; padding:9px 16px; font-size:13.5px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:'Inter',sans-serif; }
+  .btn-ghost { background:none; border:1px solid var(--line); color:var(--text); border-radius:7px; padding:8px 14px; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-family:'Inter',sans-serif; }
+  .btn-ghost.small { padding:5px 10px; font-size:12px; }
+  .icon-btn { background:none; border:none; color:var(--dim); cursor:pointer; padding:4px; font-size:14px; }
+  .form-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .form-head h3 { margin:0; }
+  .sub-head { font-size:12px; color:var(--dim); margin:14px 0 6px; border-left:2px solid var(--interval); padding-left:7px; }
+  .rep-gen { display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .rep-gen .x, .rep-gen .unit { color:var(--dim); font-size:13px; }
+  .rest-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13px; color:var(--dim); flex-wrap:wrap; }
+  .rest-row .inp { width:80px; }
+  .rep-table-head, .rep-row { display:grid; grid-template-columns: 18px 1fr 1fr 1fr 1fr 56px 20px; gap:5px; align-items:center; margin-bottom:6px; }
+  .rep-table-head { color:var(--dim); font-size:10.5px; }
+  .rep-idx { color:var(--dim); font-size:12px; }
+  .rep-pace { font-size:11px; color:var(--tempo); white-space:nowrap; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; color:#0F1113; }
+  .session-row { display:flex; gap:10px; padding:10px 0; border-top:1px solid var(--line); align-items:flex-start; }
+  .session-row:first-child { border-top:none; }
+  .session-day { width:34px; flex-shrink:0; font-family:'Oswald',sans-serif; font-size:12.5px; color:var(--dim); padding-top:2px; }
+  .session-body { flex:1; border-left:3px solid; padding-left:10px; }
+  .session-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .session-title { font-size:13.5px; }
+  .session-sub { font-size:11.5px; color:var(--dim); margin-top:3px; }
+  .session-logged { display:flex; align-items:center; gap:6px; margin-top:6px; }
+  .logged-txt { font-size:11.5px; color:var(--dim); }
+  .week-card { background:var(--panel); border:1px solid var(--line); border-radius:10px; margin-bottom:10px; overflow:hidden; }
+  .week-current { border-color: var(--interval); }
+  .week-head { width:100%; background:none; border:none; color:var(--text); display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer; font-family:'Inter',sans-serif; }
+  .week-head-left { display:flex; align-items:center; gap:8px; }
+  .week-num { font-family:'Oswald',sans-serif; font-size:14px; }
+  .week-phase { font-size:11px; color:var(--dim); }
+  .week-now { font-size:10px; background:var(--interval); color:#fff; padding:2px 7px; border-radius:10px; }
+  .week-head-right { display:flex; align-items:center; gap:10px; }
+  .week-km { font-size:13px; color:var(--dim); }
+  .adj-badge { font-size:10.5px; display:inline-flex; align-items:center; gap:2px; padding:2px 6px; border-radius:10px; }
+  .adj-up { color: var(--easy); background: rgba(47,168,160,0.15); }
+  .adj-down { color: var(--interval); background: rgba(232,70,42,0.15); }
+  .week-body { padding: 4px 14px 12px; }
+  .run-item { display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--line); }
+  .run-item:first-child { border-top:none; }
+  .run-main { flex:1; }
+  .run-title { font-size:13.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .run-meta { font-size:11.5px; color:var(--dim); margin-top:3px; }
+  .stat-row { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .stat-box { background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:10px 14px; flex:1; min-width:100px; }
+  .stat-box .v { font-family:'Oswald',sans-serif; font-size:19px; }
+  .stat-box .l { font-size:11px; color:var(--dim); }
+  .empty { color:var(--dim); font-size:13px; padding:20px 0; text-align:center; }
+  .fab-row { display:flex; justify-content:flex-end; margin-bottom:12px; }
+  .score-detail { display:flex; gap:12px; margin-top:4px; flex-wrap:wrap; }
+  .score-detail .sd { font-size:10.5px; color:var(--dim); }
+  .score-ring-wrap { position:relative; display:inline-flex; align-items:center; justify-content:center; }
+  .score-ring-num { position:absolute; font-family:'Oswald',sans-serif; }
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">Caricamento…</div></div>
+
+<script>
+/* ============================== STORAGE KEYS ============================== */
+const K_SETTINGS = "rn-settings-v1";
+const K_RUNS = "rn-runs-v1";
+
+/* ============================== UTILITIES ============================== */
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const round1 = (x) => Math.round(x * 10) / 10;
+const num = (v, d = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : d; };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+function parseClock(str) {
+  if (!str) return 0;
+  const parts = String(str).split(":").map((p) => p.trim()).filter((p) => p !== "");
+  if (parts.length === 0) return 0;
+  const nums = parts.map((p) => num(p, 0));
+  let sec = 0;
+  if (nums.length === 1) sec = nums[0];
+  else if (nums.length === 2) sec = nums[0] * 60 + nums[1];
+  else sec = nums[0] * 3600 + nums[1] * 60 + nums[2];
+  return Math.max(0, sec);
+}
+function secToClock(sec, forceHours) {
+  if (!Number.isFinite(sec) || sec <= 0) return forceHours ? "0:00:00" : "0:00";
+  sec = Math.round(sec);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if (h > 0 || forceHours) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+function paceToStr(secPerKm) {
+  if (!Number.isFinite(secPerKm) || secPerKm <= 0) return "—";
+  const m = Math.floor(secPerKm / 60), s = Math.round(secPerKm % 60);
+  return `${m}'${String(s).padStart(2,"0")}"`;
+}
+function fmtDate(d) {
+  const dt = new Date(d);
+  return dt.toLocaleDateString("it-IT", { day: "2-digit", month: "short" });
+}
+function weekIndexForDate(startDate, dateStr) {
+  const start = new Date(startDate), d = new Date(dateStr);
+  return Math.floor((d - start) / 86400000 / 7) + 1;
+}
+
+/* ============================== SESSION TYPE META ============================== */
+const TYPE_META = {
+  easy: { label: "Facile", color: "var(--easy)" },
+  long: { label: "Lungo", color: "var(--long)" },
+  tempo: { label: "Tempo/Soglia", color: "var(--tempo)" },
+  interval: { label: "Ripetute", color: "var(--interval)" },
+  recovery: { label: "Recupero", color: "var(--recovery)" },
+  race: { label: "Gara", color: "var(--race)" },
+  rest: { label: "Riposo", color: "var(--dim)" },
+};
+
+/* ============================== PLAN GENERATION ============================== */
+function intervalPaceAdjust(repKm) {
+  if (repKm <= 0.5) return 15;
+  if (repKm <= 1.0) return 0;
+  return -10;
+}
+function buildSession(base, role, paces) {
+  if (base.type === "interval") {
+    return { type:"interval", role, warmupKm:2, warmupPaceSec:paces.easy, cooldownKm:1.5, cooldownPaceSec:paces.easy,
+      repCount: base.repCount, repDistanceKm: base.repDistanceKm,
+      repPaceSec: paces.interval - intervalPaceAdjust(base.repDistanceKm),
+      restSec: base.restSec, restType: base.restType };
+  }
+  return { type: base.type, role, distanceKm: base.distanceKm, paceSec: paces[base.type], note: base.note };
+}
+function generateBasePlan(settings) {
+  const { raceType, targetTimeSec, planWeeks, daysPerWeek } = settings;
+  const raceKm = raceType === "marathon" ? 42.195 : 21.0975;
+  const goalPace = targetTimeSec / raceKm;
+  const paces = { recovery: goalPace + 90, easy: goalPace + 60, long: goalPace + 35, tempo: goalPace - 5, interval: goalPace - 25 };
+  const longBase = raceType === "marathon" ? 12 : 9;
+  const longPeak = raceType === "marathon" ? 32 : 18;
+  const taperWeeks = Math.max(2, Math.round(planWeeks * 0.12));
+  const peakWeekIndex = Math.max(2, planWeeks - taperWeeks);
+  const weeks = [];
+  for (let w = 1; w <= planWeeks; w++) {
+    const progress = clamp((w - 1) / Math.max(1, peakWeekIndex - 1), 0, 1);
+    let phase;
+    if (w > planWeeks - taperWeeks) phase = "taper";
+    else if (progress < 0.4) phase = "base";
+    else if (progress < 0.75) phase = "build";
+    else phase = "peak";
+    const isCutback = w % 4 === 0 && phase !== "taper";
+    let longKm = longBase + (longPeak - longBase) * progress;
+    if (phase === "taper") {
+      const tp = (w - (planWeeks - taperWeeks)) / taperWeeks;
+      longKm = longPeak * (1 - 0.55 * tp);
+    }
+    if (isCutback) longKm *= 0.8;
+    longKm = Math.round(longKm * 2) / 2;
+
+    let qualitySession;
+    if (phase === "taper") {
+      qualitySession = { type:"tempo", distanceKm: Math.round((3 + 2*progress)*2)/2 || 3, note:"Tempo breve per mantenere brillantezza" };
+    } else {
+      const isIntervalWeek = phase !== "base" && w % 2 === 0;
+      if (isIntervalWeek) {
+        const repKm = phase === "build" ? 1 : 1.2;
+        const repCount = 4 + Math.min(4, Math.floor(w / 3));
+        qualitySession = { type:"interval", repDistanceKm: repKm, repCount, restSec: 120, restType: "jog" };
+      } else {
+        qualitySession = { type:"tempo", distanceKm: Math.round((4 + 4*progress)*2)/2 };
+      }
+    }
+    const easyKm = Math.round((5 + 2*progress)*2)/2;
+    const sessions = [];
+    if (daysPerWeek <= 3) {
+      sessions.push({ day:"Mar", ...buildSession(qualitySession,"quality",paces) });
+      sessions.push({ day:"Gio", ...buildSession({type:"easy",distanceKm:easyKm},"easy",paces) });
+      sessions.push({ day:"Dom", ...buildSession({type:"long",distanceKm:longKm},"long",paces) });
+    } else if (daysPerWeek === 4) {
+      sessions.push({ day:"Mar", ...buildSession({type:"easy",distanceKm:easyKm},"easy",paces) });
+      sessions.push({ day:"Gio", ...buildSession(qualitySession,"quality",paces) });
+      sessions.push({ day:"Ven", ...buildSession({type:"easy",distanceKm:Math.round(easyKm*0.7*2)/2},"easy",paces) });
+      sessions.push({ day:"Dom", ...buildSession({type:"long",distanceKm:longKm},"long",paces) });
+    } else {
+      sessions.push({ day:"Lun", ...buildSession({type:"recovery",distanceKm:5},"recovery",paces) });
+      sessions.push({ day:"Mar", ...buildSession({type:"easy",distanceKm:easyKm},"easy",paces) });
+      sessions.push({ day:"Gio", ...buildSession(qualitySession,"quality",paces) });
+      sessions.push({ day:"Ven", ...buildSession({type:"easy",distanceKm:Math.round(easyKm*0.7*2)/2},"easy",paces) });
+      sessions.push({ day:"Dom", ...buildSession({type:"long",distanceKm:longKm},"long",paces) });
+    }
+    weeks.push({ weekNum:w, phase, sessions });
+  }
+  return { goalPace, paces, weeks, raceKm };
+}
+function scaleSession(s, factor) {
+  const r = { ...s };
+  if (s.type === "interval") r.repCount = clamp(Math.round(s.repCount*factor), 3, s.repCount+4);
+  else if (s.type !== "rest") r.distanceKm = Math.max(2, Math.round(s.distanceKm*factor*2)/2);
+  return r;
+}
+function computeAdaptedPlan(basePlan, runs) {
+  if (!basePlan) return [];
+  let cumFactor = 1;
+  const adapted = [];
+  for (const week of basePlan.weeks) {
+    const sessions = week.sessions.map((s) => scaleSession(s, cumFactor));
+    adapted.push({ ...week, sessions, adjFactor: cumFactor });
+    const weekRuns = runs.filter((r) => r.weekNum === week.weekNum && r.score);
+    if (weekRuns.length > 0) {
+      const avg = weekRuns.reduce((a,r)=>a+r.score.overall,0) / weekRuns.length;
+      let delta = 1;
+      if (avg >= 85) delta = 1.08; else if (avg >= 70) delta = 1.04; else if (avg >= 55) delta = 1.0; else delta = 0.85;
+      cumFactor = clamp(cumFactor * delta, 0.75, 1.25);
+    }
+  }
+  return adapted;
+}
+
+/* ============================== SCORING ============================== */
+function weightedAvgHR(reps) {
+  const withHR = reps.filter((r) => r.avgHR && r.durationSec);
+  if (withHR.length === 0) return null;
+  const totalDur = withHR.reduce((a,r)=>a+r.durationSec,0);
+  return withHR.reduce((a,r)=>a+r.avgHR*r.durationSec,0) / totalDur;
+}
+function runAggregate(run) {
+  if (run.type === "interval") {
+    const reps = run.reps || [];
+    const repsDist = reps.reduce((a,r)=>a+num(r.distanceKm),0);
+    const repsDur = reps.reduce((a,r)=>a+num(r.durationSec),0);
+    const totalDist = repsDist + num(run.warmup?.distanceKm) + num(run.cooldown?.distanceKm);
+    const totalDur = repsDur + num(run.warmup?.durationSec) + num(run.cooldown?.durationSec);
+    const avgPaceSec = repsDist > 0 ? repsDur/repsDist : null;
+    const avgHR = weightedAvgHR(reps);
+    const maxHRRun = Math.max(0, ...reps.map(r=>num(r.maxHR)), num(run.warmup?.avgHR), num(run.cooldown?.avgHR));
+    return { distanceKm: totalDist, durationSec: totalDur, avgPaceSec, avgHR, maxHRRun: maxHRRun || null };
+  }
+  const avgPaceSec = run.distanceKm > 0 ? run.durationSec/run.distanceKm : null;
+  return { distanceKm: num(run.distanceKm), durationSec: num(run.durationSec), avgPaceSec, avgHR: run.avgHR || null, maxHRRun: run.maxHR || null };
+}
+function computeScore(run, planned, maxHR, bestEfficiency) {
+  const agg = runAggregate(run);
+  let plannedDistance = null, targetPaceSec = null;
+  if (planned) {
+    plannedDistance = planned.type === "interval" ? planned.repDistanceKm*planned.repCount : planned.distanceKm;
+    targetPaceSec = planned.type === "interval" ? planned.repPaceSec : planned.paceSec;
+  }
+  let paceScore = 70;
+  if (targetPaceSec && agg.avgPaceSec) {
+    const dev = Math.abs(agg.avgPaceSec - targetPaceSec) / targetPaceSec;
+    paceScore = clamp(100 - dev*100*3, 0, 100);
+  }
+  let completionScore = 100;
+  if (plannedDistance) completionScore = clamp((agg.distanceKm/plannedDistance)*100, 0, 100);
+  let efficiencyScore = 70, efficiency = null;
+  if (agg.avgPaceSec && agg.avgHR) {
+    const speedKmh = 3600/agg.avgPaceSec;
+    efficiency = speedKmh/agg.avgHR;
+    if (bestEfficiency && bestEfficiency > 0) efficiencyScore = clamp((efficiency/bestEfficiency)*100, 0, 100);
+  }
+  let hrControlScore = 70;
+  if (maxHR && agg.avgHR) {
+    const pctAvg = (agg.avgHR/maxHR)*100;
+    if (run.type === "easy" || run.type === "long" || run.type === "recovery") {
+      hrControlScore = pctAvg <= 78 ? clamp(100-Math.max(0,65-pctAvg)*3,0,100) : clamp(100-(pctAvg-78)*4,0,100);
+    } else if (run.type === "tempo") {
+      hrControlScore = (pctAvg>=80 && pctAvg<=88) ? 100 : clamp(100-Math.abs(pctAvg-84)*4,0,100);
+    } else if (run.type === "interval" && agg.maxHRRun) {
+      const pctMax = (agg.maxHRRun/maxHR)*100;
+      hrControlScore = clamp(100-Math.max(0,90-pctMax)*3,0,100);
+    }
+  }
+  const overall = Math.round(0.35*paceScore + 0.2*completionScore + 0.25*efficiencyScore + 0.2*hrControlScore);
+  return { overall, paceScore:Math.round(paceScore), completionScore:Math.round(completionScore),
+    efficiencyScore:Math.round(efficiencyScore), hrControlScore:Math.round(hrControlScore), avgPaceSec: agg.avgPaceSec, efficiency };
+}
+
+/* ============================== DEFAULTS ============================== */
+const DEFAULT_SETTINGS = {
+  raceType: "half", targetTimeSec: 2*3600 + 5*60, planWeeks: 16, daysPerWeek: 4, maxHR: 185,
+  startDate: new Date().toISOString().slice(0,10),
+};
+
+/* ============================== STATE ============================== */
+let state = { settings: DEFAULT_SETTINGS, runs: [] };
+let ui = { tab: "dashboard", showForm: false, prefillLink: null, form: null, weekOpen: {}, settingsDraft: null };
+
+function newFormState() {
+  return {
+    linked: "", type: "easy", date: new Date().toISOString().slice(0,10),
+    distanceKm: "", durationClock: "", avgHR: "", maxHR: "", notes: "",
+    warmup: { distanceKm:"", durationClock:"", avgHR:"" },
+    cooldown: { distanceKm:"", durationClock:"", avgHR:"" },
+    reps: [], restClock: "2:00", restType: "jog", genCount: 6, genDist: 1,
+  };
+}
+function settingsToDraft(s) {
+  return { raceType: s.raceType, h: Math.floor(s.targetTimeSec/3600), mi: Math.floor((s.targetTimeSec%3600)/60), se: s.targetTimeSec%60,
+    planWeeks: s.planWeeks, daysPerWeek: s.daysPerWeek, maxHR: s.maxHR, startDate: s.startDate };
+}
+ui.settingsDraft = settingsToDraft(state.settings);
+
+/* ============================== PERSISTENCE ============================== */
+async function loadAll() {
+  try { const raw = localStorage.getItem(K_SETTINGS); if (raw) { state.settings = JSON.parse(raw); ui.settingsDraft = settingsToDraft(state.settings); } } catch(e) {}
+  try { const raw = localStorage.getItem(K_RUNS); if (raw) state.runs = JSON.parse(raw); } catch(e) {}
+}
+function saveSettings() { try { localStorage.setItem(K_SETTINGS, JSON.stringify(state.settings)); } catch(e) {} }
+function saveRuns() { try { localStorage.setItem(K_RUNS, JSON.stringify(state.runs)); } catch(e) {} }
+
+/* ============================== DERIVED DATA ============================== */
+function getBasePlan() { return generateBasePlan(state.settings); }
+function getScoredRuns(basePlan) {
+  return state.runs.map((r) => {
+    let planned = null;
+    if (r.linkedKey) {
+      const [wk, idx] = r.linkedKey.split("-").map((x)=>parseInt(x,10));
+      const w = basePlan.weeks.find((w)=>w.weekNum===wk);
+      planned = w ? w.sessions[idx] : null;
+    }
+    const others = state.runs.filter((x)=>x.id!==r.id);
+    const bestEff = Math.max(0, ...others.filter((x)=>x.type===r.type && x.score?.efficiency).map((x)=>x.score.efficiency));
+    const score = computeScore(r, planned, state.settings.maxHR, bestEff || null);
+    return { ...r, score };
+  });
+}
+function getCurrentWeekNum() {
+  const wn = weekIndexForDate(state.settings.startDate, new Date().toISOString().slice(0,10));
+  return clamp(wn, 1, state.settings.planWeeks);
+}
+function getPlannedSessionOptions(adaptedPlan, scoredRuns) {
+  const opts = [];
+  adaptedPlan.forEach((w) => {
+    w.sessions.forEach((s, i) => {
+      if (s.type === "rest") return;
+      const key = `${w.weekNum}-${i}`;
+      if (scoredRuns.some((r)=>r.linkedKey===key)) return;
+      const label = s.type === "interval"
+        ? `Sett. ${w.weekNum} · ${s.day} · Ripetute ${s.repCount}×${s.repDistanceKm}km`
+        : `Sett. ${w.weekNum} · ${s.day} · ${TYPE_META[s.type].label} ${s.distanceKm}km`;
+      opts.push({ key, label, weekNum: w.weekNum, session: s });
+    });
+  });
+  return opts;
+}
+
+/* ============================== RENDER HELPERS ============================== */
+function scoreRing(value, size) {
+  size = size || 40;
+  const r = size/2 - 4, c = 2*Math.PI*r, off = c - (clamp(value,0,100)/100)*c;
+  const color = value >= 80 ? "var(--easy)" : value >= 60 ? "var(--tempo)" : "var(--interval)";
+  return `<span class="score-ring-wrap" style="width:${size}px;height:${size}px">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="4"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="4"
+        stroke-dasharray="${c}" stroke-dashoffset="${off}" stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"/>
+    </svg>
+    <span class="score-ring-num" style="font-size:${size*0.32}px">${Math.round(value)}</span>
+  </span>`;
+}
+function typeTag(type) {
+  const m = TYPE_META[type] || TYPE_META.easy;
+  return `<span class="tag" style="background:${m.color}">${m.label}</span>`;
+}
+function chip(label, active, action, extra) {
+  return `<button type="button" class="chip${active?" chip-active":""}" style="${active?`background:${extra};border-color:${extra}`:""}" data-action="${action}">${label}</button>`;
+}
+
+/* ============================== FORM RENDER ============================== */
+function renderRunForm() {
+  const f = ui.form;
+  const basePlan = getBasePlan();
+  const scored = getScoredRuns(basePlan);
+  const adapted = computeAdaptedPlan(basePlan, scored);
+  const options = getPlannedSessionOptions(adapted, scored);
+
+  const typeChips = ["easy","long","tempo","interval","recovery","race"].map((t) =>
+    `<button type="button" class="chip${f.type===t?" chip-active":""}" style="${f.type===t?`background:${TYPE_META[t].color};border-color:${TYPE_META[t].color}`:""}" data-action="set-type" data-value="${t}">${TYPE_META[t].label}</button>`
+  ).join("");
+
+  const optionsHtml = options.map((o) => `<option value="${o.key}" ${f.linked===o.key?"selected":""}>${esc(o.label)}</option>`).join("");
+
+  let body;
+  if (f.type !== "interval") {
+    body = `
+      <div class="grid2">
+        <label class="field"><span>Distanza (km)</span><input class="inp" type="number" step="0.1" data-field="distanceKm" value="${esc(f.distanceKm)}"/></label>
+        <label class="field"><span>Tempo totale</span><input class="inp" type="text" placeholder="hh:mm:ss" data-field="durationClock" value="${esc(f.durationClock)}"/></label>
+        <label class="field"><span>Battiti medi</span><input class="inp" type="number" data-field="avgHR" value="${esc(f.avgHR)}"/></label>
+        <label class="field"><span>Battiti massimi</span><input class="inp" type="number" data-field="maxHR" value="${esc(f.maxHR)}"/></label>
+      </div>`;
+  } else {
+    const repRows = f.reps.map((r, i) => {
+      const pace = num(r.distanceKm) > 0 && parseClock(r.durationClock) > 0 ? parseClock(r.durationClock)/num(r.distanceKm) : null;
+      return `<div class="rep-row">
+        <span class="rep-idx">${i+1}</span>
+        <input class="inp small" type="number" step="0.1" data-field="rep.${r.id}.distanceKm" value="${esc(r.distanceKm)}"/>
+        <input class="inp small" type="text" placeholder="mm:ss" data-field="rep.${r.id}.durationClock" value="${esc(r.durationClock)}"/>
+        <input class="inp small" type="number" data-field="rep.${r.id}.avgHR" value="${esc(r.avgHR)}"/>
+        <input class="inp small" type="number" data-field="rep.${r.id}.maxHR" value="${esc(r.maxHR)}"/>
+        <span class="rep-pace">${pace?paceToStr(pace)+"/km":""}</span>
+        <button type="button" class="icon-btn" data-action="remove-rep" data-repid="${r.id}">✕</button>
+      </div>`;
+    }).join("");
+    body = `
+      <div class="interval-block">
+        <div class="sub-head">Riscaldamento</div>
+        <div class="grid3">
+          <input class="inp" type="number" step="0.1" placeholder="km" data-field="warmup.distanceKm" value="${esc(f.warmup.distanceKm)}"/>
+          <input class="inp" type="text" placeholder="mm:ss" data-field="warmup.durationClock" value="${esc(f.warmup.durationClock)}"/>
+          <input class="inp" type="number" placeholder="FC media" data-field="warmup.avgHR" value="${esc(f.warmup.avgHR)}"/>
+        </div>
+        <div class="sub-head">Ripetute</div>
+        <div class="rep-gen">
+          <input class="inp small" style="width:60px" type="number" data-field="genCount" value="${esc(f.genCount)}"/>
+          <span class="x">×</span>
+          <input class="inp small" style="width:70px" type="number" step="0.1" data-field="genDist" value="${esc(f.genDist)}"/>
+          <span class="unit">km</span>
+          <button type="button" class="btn-ghost small" data-action="generate-reps">Genera ripetute</button>
+        </div>
+        <div class="rest-row">
+          <span>Recupero tra le ripetute:</span>
+          <input class="inp small" type="text" placeholder="mm:ss" data-field="restClock" value="${esc(f.restClock)}"/>
+          <select class="inp small" style="width:auto" data-field="restType">
+            <option value="jog" ${f.restType==="jog"?"selected":""}>corsa lenta</option>
+            <option value="walk" ${f.restType==="walk"?"selected":""}>camminata</option>
+            <option value="still" ${f.restType==="still"?"selected":""}>fermo</option>
+          </select>
+        </div>
+        ${f.reps.length ? `<div class="rep-table">
+          <div class="rep-table-head"><span>#</span><span>km</span><span>tempo</span><span>FC media</span><span>FC max</span><span></span><span></span></div>
+          ${repRows}
+          <button type="button" class="btn-ghost small" data-action="add-rep">+ riga</button>
+        </div>` : ""}
+        <div class="sub-head">Defaticamento</div>
+        <div class="grid3">
+          <input class="inp" type="number" step="0.1" placeholder="km" data-field="cooldown.distanceKm" value="${esc(f.cooldown.distanceKm)}"/>
+          <input class="inp" type="text" placeholder="mm:ss" data-field="cooldown.durationClock" value="${esc(f.cooldown.durationClock)}"/>
+          <input class="inp" type="number" placeholder="FC media" data-field="cooldown.avgHR" value="${esc(f.cooldown.avgHR)}"/>
+        </div>
+      </div>`;
+  }
+
+  return `<div class="panel form">
+    <div class="form-head"><h3>Registra corsa</h3><button type="button" class="icon-btn" data-action="close-form">✕</button></div>
+    <div class="grid2">
+      <label class="field"><span>Data</span><input class="inp" type="date" data-field="date" value="${esc(f.date)}"/></label>
+      <label class="field"><span>Sessione pianificata (opzionale)</span>
+        <select class="inp" data-field="linked" data-action-change="select-linked">
+          <option value="">Corsa libera</option>
+          ${optionsHtml}
+        </select>
+      </label>
+    </div>
+    <label class="field"><span>Tipo di allenamento</span><div class="type-picker">${typeChips}</div></label>
+    ${body}
+    <label class="field"><span>Note</span><textarea class="inp" rows="2" data-field="notes">${esc(f.notes)}</textarea></label>
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" data-action="close-form">Annulla</button>
+      <button type="button" class="btn-primary" data-action="save-run">✓ Salva corsa</button>
+    </div>
+  </div>`;
+}
+
+/* ============================== SESSION / WEEK RENDER ============================== */
+function renderSessionRow(session, run, weekNum, idx) {
+  const m = TYPE_META[session.type];
+  let title;
+  if (session.type === "interval") title = `${session.repCount} × ${session.repDistanceKm} km @ ${paceToStr(session.repPaceSec)}/km`;
+  else if (session.type !== "rest") title = `${session.distanceKm} km @ ${paceToStr(session.paceSec)}/km`;
+  else title = "Giorno di riposo";
+
+  const sub = session.type === "interval"
+    ? `<div class="session-sub">risc. ${session.warmupKm} km facile · rec. ${secToClock(session.restSec)} ${session.restType==="jog"?"corsa lenta":session.restType==="walk"?"camminata":"fermo"} · def. ${session.cooldownKm} km facile</div>`
+    : "";
+
+  const logged = run ? `<div class="session-logged">${scoreRing(run.score.overall,30)}<span class="logged-txt">registrata ${fmtDate(run.date)}</span></div>` : "";
+  const btn = (!run && session.type !== "rest") ? `<button type="button" class="btn-ghost small" data-action="open-form-session" data-week="${weekNum}" data-idx="${idx}">▶ registra</button>` : "";
+
+  return `<div class="session-row">
+    <div class="session-day">${session.day}</div>
+    <div class="session-body" style="border-color:${m.color}">
+      <div class="session-top">${typeTag(session.type)}<span class="session-title">${esc(title)}</span></div>
+      ${sub}${logged}
+    </div>
+    ${btn}
+  </div>`;
+}
+function renderWeekCard(week, scoredRuns, currentWeekNum) {
+  const totalKm = week.sessions.reduce((a,s) => {
+    if (s.type === "interval") return a + s.repDistanceKm*s.repCount + s.warmupKm + s.cooldownKm;
+    if (s.type === "rest") return a;
+    return a + s.distanceKm;
+  }, 0);
+  const weekRuns = scoredRuns.filter((r) => r.weekNum === week.weekNum);
+  const avgScore = weekRuns.length ? Math.round(weekRuns.reduce((a,r)=>a+r.score.overall,0)/weekRuns.length) : null;
+  const isCurrent = week.weekNum === currentWeekNum;
+  const openState = ui.weekOpen[week.weekNum];
+  const open = openState === undefined ? isCurrent : openState;
+
+  const phaseLabel = week.phase==="base"?"base":week.phase==="build"?"sviluppo":week.phase==="peak"?"picco":"scarico";
+  const adjBadge = week.adjFactor !== 1
+    ? `<span class="adj-badge ${week.adjFactor>1?"adj-up":"adj-down"}">${week.adjFactor>1?"▲":"▼"} ${Math.round((week.adjFactor-1)*100)}%</span>` : "";
+
+  const sessionsHtml = week.sessions.map((s,i) => renderSessionRow(s, weekRuns.find((r)=>r.linkedKey===`${week.weekNum}-${i}`), week.weekNum, i)).join("");
+
+  return `<div class="week-card ${isCurrent?"week-current":""}">
+    <button type="button" class="week-head" data-action="toggle-week" data-week="${week.weekNum}">
+      <div class="week-head-left">
+        <span class="week-num">Sett. ${week.weekNum}</span>
+        <span class="week-phase">${phaseLabel}</span>
+        ${isCurrent?'<span class="week-now">ora</span>':""}
+      </div>
+      <div class="week-head-right">
+        <span class="week-km">${round1(totalKm)} km</span>
+        ${avgScore!==null?scoreRing(avgScore,28):""}
+        ${adjBadge}
+        <span>${open?"▾":"▸"}</span>
+      </div>
+    </button>
+    ${open?`<div class="week-body">${sessionsHtml}</div>`:""}
+  </div>`;
+}
+
+/* ============================== TAB RENDER ============================== */
+function renderDashboard(basePlan, scoredRuns) {
+  const chartPoints = [...scoredRuns].sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-15);
+  let chartHtml = "";
+  if (chartPoints.length > 1) {
+    const w = 640, h = 160, pad = 24;
+    const xs = chartPoints.map((_, i) => pad + (i*(w-2*pad))/(chartPoints.length-1));
+    const ys = chartPoints.map((p) => h - pad - (clamp(p.score.overall,0,100)/100)*(h-2*pad));
+    const pathPts = xs.map((x,i)=>`${x},${ys[i]}`).join(" ");
+    const dots = xs.map((x,i)=>`<circle cx="${x}" cy="${ys[i]}" r="3" fill="#E8462A"/>`).join("");
+    chartHtml = `<div class="panel"><h3>Andamento punteggio</h3>
+      <svg width="100%" viewBox="0 0 ${w} ${h}" style="overflow:visible">
+        <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#333B41"/>
+        <polyline points="${pathPts}" fill="none" stroke="#E8462A" stroke-width="2"/>
+        ${dots}
+      </svg></div>`;
+  }
+
+  const recent = [...scoredRuns].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,10);
+  const runsHtml = recent.length === 0 ? `<div class="empty">Nessuna corsa registrata ancora.</div>` :
+    recent.map((r) => {
+      const agg = runAggregate(r);
+      return `<div class="run-item">
+        ${scoreRing(r.score.overall,40)}
+        <div class="run-main">
+          <div class="run-title">${typeTag(r.type)}<span>${round1(agg.distanceKm)} km · ${paceToStr(agg.avgPaceSec)}/km</span></div>
+          <div class="run-meta">${fmtDate(r.date)} · FC media ${agg.avgHR?Math.round(agg.avgHR):"—"} · FC max ${agg.maxHRRun||"—"}</div>
+          <div class="score-detail">
+            <span class="sd">ritmo ${r.score.paceScore}</span>
+            <span class="sd">completamento ${r.score.completionScore}</span>
+            <span class="sd">efficienza ${r.score.efficiencyScore}</span>
+            <span class="sd">controllo FC ${r.score.hrControlScore}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+
+  const last5 = scoredRuns.slice(-5);
+  const avg5 = last5.length ? Math.round(last5.reduce((a,r)=>a+r.score.overall,0)/last5.length) : "—";
+  const totalKm = round1(scoredRuns.reduce((a,r)=>a+runAggregate(r).distanceKm,0));
+
+  return `
+    <div class="fab-row"><button type="button" class="btn-primary" data-action="open-form">+ Registra corsa</button></div>
+    ${ui.showForm ? renderRunForm() : ""}
+    <div class="stat-row">
+      <div class="stat-box"><div class="v">${scoredRuns.length}</div><div class="l">corse registrate</div></div>
+      <div class="stat-box"><div class="v">${avg5}</div><div class="l">punteggio medio (ultime 5)</div></div>
+      <div class="stat-box"><div class="v">${totalKm} km</div><div class="l">totale percorso</div></div>
+    </div>
+    ${chartHtml}
+    <div class="panel"><h3>Corse recenti</h3>${runsHtml}</div>
+  `;
+}
+function renderPiano(adaptedPlan, scoredRuns, currentWeekNum) {
+  return `${ui.showForm ? renderRunForm() : ""}${adaptedPlan.map((w)=>renderWeekCard(w, scoredRuns, currentWeekNum)).join("")}`;
+}
+function renderImpostazioni() {
+  const d = ui.settingsDraft;
+  return `<div class="panel">
+    <h3>Obiettivo e piano</h3>
+    <label class="field"><span>Gara</span>
+      <div class="type-picker">
+        <button type="button" class="chip${d.raceType==="half"?" chip-active":""}" style="${d.raceType==="half"?"background:var(--interval);border-color:var(--interval)":""}" data-action="set-race" data-value="half">Mezza maratona</button>
+        <button type="button" class="chip${d.raceType==="marathon"?" chip-active":""}" style="${d.raceType==="marathon"?"background:var(--interval);border-color:var(--interval)":""}" data-action="set-race" data-value="marathon">Maratona</button>
+      </div>
+    </label>
+    <label class="field"><span>Tempo obiettivo (h : min : sec)</span>
+      <div class="time-inputs">
+        <input class="inp small" type="number" data-field="sd.h" value="${d.h}"/>
+        <input class="inp small" type="number" data-field="sd.mi" value="${d.mi}"/>
+        <input class="inp small" type="number" data-field="sd.se" value="${d.se}"/>
+      </div>
+    </label>
+    <div class="grid2">
+      <label class="field"><span>Durata piano (settimane)</span><input class="inp" type="number" data-field="sd.planWeeks" value="${d.planWeeks}"/></label>
+      <label class="field"><span>Giorni di corsa a settimana</span><input class="inp" type="number" data-field="sd.daysPerWeek" value="${d.daysPerWeek}"/></label>
+      <label class="field"><span>FC massima</span><input class="inp" type="number" data-field="sd.maxHR" value="${d.maxHR}"/></label>
+      <label class="field"><span>Data inizio piano</span><input class="inp" type="date" data-field="sd.startDate" value="${d.startDate}"/></label>
+    </div>
+    <div class="form-actions"><button type="button" class="btn-primary" data-action="save-settings">Salva e genera piano</button></div>
+  </div>`;
+}
+
+/* ============================== MAIN RENDER ============================== */
+function render() {
+  const basePlan = getBasePlan();
+  const scoredRuns = getScoredRuns(basePlan);
+  const adaptedPlan = computeAdaptedPlan(basePlan, scoredRuns);
+  const currentWeekNum = getCurrentWeekNum();
+  const raceLabel = state.settings.raceType === "marathon" ? "Maratona" : "Mezza maratona";
+
+  let tabContent;
+  if (ui.tab === "dashboard") tabContent = renderDashboard(basePlan, scoredRuns);
+  else if (ui.tab === "piano") tabContent = renderPiano(adaptedPlan, scoredRuns, currentWeekNum);
+  else tabContent = renderImpostazioni();
+
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <div>
+        <h1>Corsa — ${raceLabel}</h1>
+        <div class="sub">Obiettivo ${secToClock(state.settings.targetTimeSec,true)} · ritmo ${paceToStr(basePlan.goalPace)}/km · settimana ${currentWeekNum}/${state.settings.planWeeks}</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button type="button" class="tab-btn ${ui.tab==="dashboard"?"active":""}" data-action="set-tab" data-value="dashboard">Dashboard</button>
+      <button type="button" class="tab-btn ${ui.tab==="piano"?"active":""}" data-action="set-tab" data-value="piano">Piano</button>
+      <button type="button" class="tab-btn ${ui.tab==="impostazioni"?"active":""}" data-action="set-tab" data-value="impostazioni">Impostazioni</button>
+    </div>
+    ${tabContent}
+  `;
+}
+
+/* ============================== FIELD PATH SET/GET ============================== */
+function setFormField(path, value) {
+  if (path.startsWith("rep.")) {
+    const [, id, field] = path.split(".");
+    const rep = ui.form.reps.find((r) => r.id === id);
+    if (rep) rep[field] = value;
+  } else if (path.startsWith("warmup.") || path.startsWith("cooldown.")) {
+    const [a,b] = path.split(".");
+    ui.form[a][b] = value;
+  } else {
+    ui.form[path] = value;
+  }
+}
+function setSettingsDraftField(path, value) {
+  const key = path.split(".")[1];
+  ui.settingsDraft[key] = value;
+}
+
+/* ============================== ACTIONS ============================== */
+function applyLinkedSession(key) {
+  const basePlan = getBasePlan();
+  const scoredRuns = getScoredRuns(basePlan);
+  const adaptedPlan = computeAdaptedPlan(basePlan, scoredRuns);
+  const options = getPlannedSessionOptions(adaptedPlan, scoredRuns);
+  const o = options.find((x) => x.key === key);
+  if (!o) return;
+  ui.form.linked = key;
+  ui.form.type = o.session.type === "interval" ? "interval" : o.session.type;
+  if (o.session.type === "interval") { ui.form.genCount = o.session.repCount; ui.form.genDist = o.session.repDistanceKm; }
+  else ui.form.distanceKm = String(o.session.distanceKm);
+}
+
+function buildRunFromForm() {
+  const f = ui.form;
+  const base = { id: uid(), date: f.date, type: f.type, weekNum: f.linked ? parseInt(f.linked.split("-")[0],10) : getCurrentWeekNum(), linkedKey: f.linked || null, notes: f.notes };
+  if (f.type === "interval") {
+    return { ...base,
+      warmup: { distanceKm: num(f.warmup.distanceKm), durationSec: parseClock(f.warmup.durationClock), avgHR: num(f.warmup.avgHR) || null },
+      cooldown: { distanceKm: num(f.cooldown.distanceKm), durationSec: parseClock(f.cooldown.durationClock), avgHR: num(f.cooldown.avgHR) || null },
+      reps: f.reps.map((r) => ({ distanceKm: num(r.distanceKm), durationSec: parseClock(r.durationClock), avgHR: num(r.avgHR) || null, maxHR: num(r.maxHR) || null })),
+      restSec: parseClock(f.restClock), restType: f.restType };
+  }
+  return { ...base, distanceKm: num(f.distanceKm), durationSec: parseClock(f.durationClock), avgHR: num(f.avgHR) || null, maxHR: num(f.maxHR) || null };
+}
+
+function handleClick(e) {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  const action = el.dataset.action;
+  if (action === "set-tab") { ui.tab = el.dataset.value; render(); }
+  else if (action === "toggle-week") {
+    const wn = parseInt(el.dataset.week,10);
+    const cur = ui.weekOpen[wn];
+    const currentlyOpen = cur === undefined ? (wn === getCurrentWeekNum()) : cur;
+    ui.weekOpen[wn] = !currentlyOpen;
+    render();
+  }
+  else if (action === "open-form") { ui.form = newFormState(); ui.prefillLink = null; ui.showForm = true; render(); }
+  else if (action === "open-form-session") {
+    const wn = el.dataset.week, idx = el.dataset.idx;
+    ui.form = newFormState();
+    ui.prefillLink = `${wn}-${idx}`;
+    applyLinkedSession(ui.prefillLink);
+    ui.showForm = true;
+    render();
+  }
+  else if (action === "close-form") { ui.showForm = false; ui.form = null; ui.prefillLink = null; render(); }
+  else if (action === "set-type") { ui.form.type = el.dataset.value; render(); }
+  else if (action === "generate-reps") {
+    const count = Math.max(1, Math.round(num(ui.form.genCount)));
+    ui.form.reps = Array.from({length: count}, () => ({ id: uid(), distanceKm: String(ui.form.genDist), durationClock:"", avgHR:"", maxHR:"" }));
+    render();
+  }
+  else if (action === "add-rep") { ui.form.reps.push({ id: uid(), distanceKm: String(ui.form.genDist||1), durationClock:"", avgHR:"", maxHR:"" }); render(); }
+  else if (action === "remove-rep") { ui.form.reps = ui.form.reps.filter((r) => r.id !== el.dataset.repid); render(); }
+  else if (action === "save-run") {
+    const run = buildRunFromForm();
+    state.runs.push(run);
+    saveRuns();
+    ui.showForm = false; ui.form = null; ui.prefillLink = null;
+    render();
+  }
+  else if (action === "set-race") { ui.settingsDraft.raceType = el.dataset.value; render(); }
+  else if (action === "save-settings") {
+    const d = ui.settingsDraft;
+    state.settings = {
+      raceType: d.raceType,
+      targetTimeSec: num(d.h)*3600 + num(d.mi)*60 + num(d.se),
+      planWeeks: clamp(num(d.planWeeks,16), 6, 30),
+      daysPerWeek: clamp(num(d.daysPerWeek,4), 3, 6),
+      maxHR: num(d.maxHR) || null,
+      startDate: d.startDate,
+    };
+    saveSettings();
+    render();
+  }
+}
+function handleInput(e) {
+  const el = e.target;
+  if (!el.dataset.field) return;
+  const path = el.dataset.field;
+  if (path.startsWith("sd.")) setSettingsDraftField(path, el.value);
+  else setFormField(path, el.value);
+  // per i campi semplici non serve re-render: si aggiorna solo lo stato in memoria
+  if (path === "distanceKm" || path === "linked") { /* no-op live */ }
+}
+function handleChange(e) {
+  const el = e.target;
+  if (el.dataset.field === "linked") {
+    applyLinkedSession(el.value);
+    render();
+  } else if (el.dataset.field === "restType") {
+    ui.form.restType = el.value;
+  }
+}
+
+/* ============================== INIT ============================== */
+async function init() {
+  await loadAll();
+  ui.settingsDraft = settingsToDraft(state.settings);
+  const app = document.getElementById("app");
+  app.addEventListener("click", handleClick);
+  app.addEventListener("input", handleInput);
+  app.addEventListener("change", handleChange);
+  render();
+}
+init();
+</script>
+</body>
+</html>
